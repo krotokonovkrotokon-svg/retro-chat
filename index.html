@@ -12,22 +12,75 @@
             <h1>★ RETRO CHAT ★</h1>
             <div class="status">[ PUBLIC ] <span class="blink">_</span></div>
         </div>
-        
+
         <div class="chat-box" id="chat-box">
             <div class="msg system">*** Xoş gəlmisiniz! ***</div>
-            <div class="msg system">*** /clear - Təmizləmək üçün ***</div>
+            <div class="msg system">*** Mesajlar artıq yadda qalır ***</div>
         </div>
-        
+
         <div class="input-area">
-            <input type="text" id="nick" placeholder="Nick" value="Guest" maxlength="15">
+            <input type="text" id="nick" placeholder="Nick" value="Amil" maxlength="15">
             <input type="text" id="msg" placeholder="Mesaj yaz..." autocomplete="off">
-            <button onclick="send()">Göndər</button>
-            <button onclick="clearChat()" class="clear-btn">Təmizlə</button>
+            <button id="sendBtn">Göndər</button>
+            <button onclick="clearDisplay()" class="clear-btn">Təmizlə</button>
         </div>
     </div>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="script.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Sənin Firebase məlumatların
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJ6Medzn-xQfe9uEWsi6yz-9jDTAKZJxc",
+            authDomain: "retro-chat-56380.firebaseapp.com",
+            databaseURL: "https://retro-chat-56380-default-rtdb.firebaseio.com",
+            projectId: "retro-chat-56380",
+            storageBucket: "retro-chat-56380.firebasestorage.app",
+            messagingSenderId: "1076331546936",
+            appId: "1:1076331546936:web:9c9da31ffb7e3d987bd9cd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, 'messages');
+
+        const chatBox = document.getElementById('chat-box');
+        const msgInput = document.getElementById('msg');
+        const nickInput = document.getElementById('nick');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Mesaj Göndərmə
+        sendBtn.onclick = () => {
+            if (msgInput.value.trim() !== "") {
+                push(messagesRef, {
+                    username: nickInput.value,
+                    text: msgInput.value,
+                    timestamp: serverTimestamp()
+                });
+                msgInput.value = "";
+            }
+        };
+
+        // Enter düyməsi ilə göndər
+        msgInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendBtn.click();
+        });
+
+        // Mesajları Bazadan Oxumaq
+        onChildAdded(messagesRef, (data) => {
+            const msg = data.val();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg';
+            msgDiv.innerHTML = `<span style="color: #0f0;">${msg.username}:</span> ${msg.text}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // Ekranı müvəqqəti təmizləmək üçün funksiya
+        window.clearDisplay = () => {
+            chatBox.innerHTML = '<div class="msg system">*** Chat təmizləndi (Bazadan silinmədi) ***</div>';
+        };
+    </script>
 </body>
 </html>
