@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -50,24 +51,24 @@
         .mesaj-satri {
             margin-bottom: 8px;
             font-size: 1.1em;
-            border-bottom: 1px dashed #333; /* Hər mesaj arası incə xətt */
+            border-bottom: 1px dashed #333;
             padding-bottom: 2px;
         }
 
-        /* İSTƏYİNİZƏ UYĞUN RƏNGLƏR */
+        /* RƏNGLƏR */
         .vaxt {
-            color: #888888; /* Boz rəng (Vaxt) */
+            color: #888888; /* Boz (Vaxt) */
             font-size: 0.8em;
             margin-right: 10px;
         }
 
         .ad {
-            color: #00BFFF; /* Mavi rəng (Ad) - DeepSkyBlue */
+            color: #00BFFF; /* Mavi (Ad) */
             font-weight: bold;
         }
 
         .mesaj-metni {
-            color: #FFFF00; /* Sarı rəng (Yazı) */
+            color: #FFFF00; /* Sarı (Yazı) */
         }
 
         /* Daxiletmə paneli */
@@ -88,16 +89,16 @@
         }
 
         #ad-input {
-            width: 15%;
+            width: 20%;
         }
 
         #mesaj-input {
-            width: 65%;
+            width: 60%;
         }
 
         /* Düymələr */
         button {
-            padding: 10px 20px;
+            padding: 10px 10px;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
             cursor: pointer;
@@ -120,7 +121,6 @@
             opacity: 0.8;
         }
         
-        /* Placeholder rəngi */
         ::placeholder {
             color: #005500;
         }
@@ -135,46 +135,56 @@
     </div>
 
     <div id="chat-window">
-        <div style="text-align: center; color: #aaa; margin-bottom: 20px;">
-            *** Xoş gəlmisiniz! ***<br>
-            *** Mesajlar artıq yadda qalır ***
-        </div>
         <!-- Mesajlar bura düşəcək -->
     </div>
 
     <div class="input-area">
-        <input type="text" id="ad-input" placeholder="Adınız" value="İstifadəçi">
+        <!-- Value hissəsi silindi, artıq boş gələcək -->
+        <input type="text" id="ad-input" placeholder="Adınız">
         <input type="text" id="mesaj-input" placeholder="Mesaj yaz...">
         <button id="gonder-btn">Göndər</button>
-        <button id="temizle-btn">Təmizlə</button>
+        <button id="temizle-btn">Sil</button>
     </div>
 </div>
 
 <script>
-    // Elementləri seçirik
     const chatWindow = document.getElementById('chat-window');
     const adInput = document.getElementById('ad-input');
     const mesajInput = document.getElementById('mesaj-input');
     const gonderBtn = document.getElementById('gonder-btn');
     const temizleBtn = document.getElementById('temizle-btn');
 
-    // Mesaj göndərmə funksiyası
+    // Səhifə açılanda yaddaşdakı mesajları yüklə
+    window.onload = function() {
+        yukleMesajlar();
+    };
+
+    function yukleMesajlar() {
+        const yaddas = localStorage.getItem('chatMesajlari');
+        if (yaddas) {
+            chatWindow.innerHTML = yaddas;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        } else {
+            chatWindow.innerHTML = '<div style="text-align: center; color: #aaa;">*** Çat Tarixçəsi Boşdur ***</div>';
+        }
+    }
+
     function mesajGonder() {
         const ad = adInput.value;
         const mesaj = mesajInput.value;
 
-        if (mesaj.trim() === "") {
-            alert("Zəhmət olmasa mesaj yazın!");
+        if (ad.trim() === "" || mesaj.trim() === "") {
+            alert("Ad və Mesaj boş ola bilməz!");
             return;
         }
 
-        // Cari vaxtı alırıq
+        // Cari vaxt
         const indi = new Date();
         const saat = indi.getHours().toString().padStart(2, '0');
         const deqiqe = indi.getMinutes().toString().padStart(2, '0');
         const tamVaxt = `${saat}:${deqiqe}`;
 
-        // HTML şablonu (SİZİN İSTƏYİNİZƏ UYĞUN)
+        // Yeni mesaj HTML-i
         const yeniMesajHTML = `
             <div class="mesaj-satri">
                 <span class="vaxt">[${tamVaxt}]</span>
@@ -183,34 +193,35 @@
             </div>
         `;
 
-        // Mesajı çata əlavə edirik
-        chatWindow.innerHTML += yeniMesajHTML;
+        // Əgər tarixçə boşdursa, o yazını sil
+        if (chatWindow.innerHTML.includes("*** Çat Tarixçəsi Boşdur ***")) {
+            chatWindow.innerHTML = "";
+        }
 
-        // Çat pəncərəsini aşağı sürüşdürürük
+        // Ekrana əlavə et
+        chatWindow.innerHTML += yeniMesajHTML;
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
-        // Mesaj qutusunu təmizləyirik (Ad qalır)
+        // YADDAŞA YAZ (LocalStorage)
+        localStorage.setItem('chatMesajlari', chatWindow.innerHTML);
+
+        // Mesaj qutusunu təmizlə (Ad qalsın)
         mesajInput.value = "";
     }
 
-    // "Göndər" düyməsinə basanda
     gonderBtn.addEventListener('click', mesajGonder);
 
-    // Enter düyməsinə basanda da göndərsin
     mesajInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             mesajGonder();
         }
     });
 
-    // "Təmizlə" düyməsi (Ekranı silir)
+    // Təmizlə düyməsi (Həm ekranı, həm yaddaşı silir)
     temizleBtn.addEventListener('click', function() {
-        if(confirm("Bütün çat tarixçəsini silmək istəyirsiniz?")) {
-            chatWindow.innerHTML = `
-                <div style="text-align: center; color: #aaa; margin-bottom: 20px;">
-                    *** Çat Təmizləndi ***
-                </div>
-            `;
+        if(confirm("Bütün yazışmaları silmək istəyirsiniz?")) {
+            localStorage.removeItem('chatMesajlari');
+            chatWindow.innerHTML = '<div style="text-align: center; color: #aaa;">*** Çat Təmizləndi ***</div>';
         }
     });
 </script>
