@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>★ Retro Chat ★</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="crt">
+        <div class="header">
+            <h1>★ RETRO CHAT ★</h1>
+            <div class="status">[ PUBLIC ] <span class="blink">_</span></div>
+        </div>
+        
+        <div class="chat-box" id="chat-box">
+            <div class="msg system">*** Xoş gəlmisiniz! ***</div>
+            <div class="msg system">*** /clear - Təmizləmək üçün ***</div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="nick" placeholder="Nick" value="Guest" maxlength="15">
+            <input type="text" id="msg" placeholder="Mesaj yaz..." autocomplete="off">
+            <button onclick="send()">Göndər</button>
+            <button onclick="clearChat()" class="clear-btn">Təmizlə</button>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
