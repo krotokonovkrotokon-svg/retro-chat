@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retro Chat</title>
     <style>
-        /* Ümumi Dizayn (Retro Stil) */
+        /* --- DİZAYN (CSS) --- */
         body {
             background-color: black;
             color: #00ff00; /* Neon yaşıl */
@@ -21,62 +21,69 @@
         .container {
             width: 800px;
             max-width: 95%;
+            display: flex;
+            flex-direction: column;
+            height: 90vh; /* Ekranın 90%-ni tutsun */
         }
 
-        /* Başlıq hissəsi */
+        /* Başlıq */
         .header {
             border: 2px solid #00ff00;
             padding: 10px;
             text-align: center;
             margin-bottom: 10px;
             box-shadow: 0 0 10px #00ff00;
+            flex-shrink: 0;
         }
 
         .header h1 {
             margin: 0;
             text-shadow: 0 0 5px #00ff00;
+            font-size: 1.5em;
         }
 
-        /* Çat pəncərəsi */
+        /* Çat Pəncərəsi */
         #chat-window {
             border: 2px solid #00ff00;
-            height: 300px;
+            flex-grow: 1; /* Boş yeri doldursun */
             overflow-y: auto;
             padding: 15px;
             margin-bottom: 10px;
             background-color: #050505;
         }
 
-        /* Mesajların Stili */
+        /* Mesaj Stili */
         .mesaj-satri {
             margin-bottom: 8px;
             font-size: 1.1em;
             border-bottom: 1px dashed #333;
             padding-bottom: 2px;
+            word-wrap: break-word;
         }
 
         /* RƏNGLƏR */
         .vaxt {
-            color: #888888; /* Boz (Vaxt) */
-            font-size: 0.8em;
-            margin-right: 10px;
+            color: #888888; /* Boz */
+            font-size: 0.7em;
+            margin-right: 8px;
         }
 
         .ad {
-            color: #00BFFF; /* Mavi (Ad) */
+            color: #00BFFF; /* Mavi (DeepSkyBlue) */
             font-weight: bold;
         }
 
         .mesaj-metni {
-            color: #FFFF00; /* Sarı (Yazı) */
+            color: #FFFF00; /* Sarı */
         }
 
-        /* Daxiletmə paneli */
+        /* Daxiletmə Paneli */
         .input-area {
             display: flex;
             border: 2px solid #00ff00;
             padding: 5px;
             gap: 5px;
+            flex-shrink: 0;
         }
 
         input {
@@ -86,44 +93,27 @@
             padding: 10px;
             font-family: 'Courier New', Courier, monospace;
             outline: none;
+            font-size: 16px; /* Mobildə zoom olmasın deyə */
         }
 
-        #ad-input {
-            width: 20%;
-        }
+        #ad-input { width: 25%; }
+        #mesaj-input { width: 75%; }
 
-        #mesaj-input {
-            width: 60%;
-        }
-
-        /* Düymələr */
         button {
-            padding: 10px 10px;
+            padding: 10px 15px;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
             cursor: pointer;
             border: 1px solid white;
-        }
-
-        #gonder-btn {
             background-color: green;
             color: white;
-            width: 10%;
         }
 
-        #temizle-btn {
-            background-color: maroon;
-            color: white;
-            width: 10%;
+        button:active {
+            background-color: #004400;
         }
 
-        button:hover {
-            opacity: 0.8;
-        }
-        
-        ::placeholder {
-            color: #005500;
-        }
+        ::placeholder { color: #005500; }
     </style>
 </head>
 <body>
@@ -131,99 +121,112 @@
 <div class="container">
     <div class="header">
         <h1>★ RETRO CHAT ★</h1>
-        <small>[ PUBLIC ]</small>
+        <small>[ SERVER ONLINE ]</small>
     </div>
 
     <div id="chat-window">
-        <!-- Mesajlar bura düşəcək -->
+        <div style="text-align: center; color: #555; margin-top: 20px;">
+            Serverə qoşulur...
+        </div>
     </div>
 
     <div class="input-area">
-        <!-- Value hissəsi silindi, artıq boş gələcək -->
         <input type="text" id="ad-input" placeholder="Adınız">
         <input type="text" id="mesaj-input" placeholder="Mesaj yaz...">
-        <button id="gonder-btn">Göndər</button>
-        <button id="temizle-btn">Sil</button>
+        <button id="gonder-btn">➤</button>
     </div>
 </div>
 
-<script>
+<!-- FIREBASE KODLARI (JavaScript) -->
+<script type="module">
+    // Firebase kitabxanalarını yükləyirik
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // Sizin Konfiqurasiya (Şəklindən götürdüyüm)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJ6MEdzn-xQfe9uEWsi6yz-9jDTAKZJxc",
+        authDomain: "retro-chat-56380.firebaseapp.com",
+        databaseURL: "https://retro-chat-56380-default-rtdb.firebaseio.com",
+        projectId: "retro-chat-56380",
+        storageBucket: "retro-chat-56380.firebasestorage.app",
+        messagingSenderId: "1076331546936",
+        appId: "1:1076331546936:web:9c9da31ffb7e3d987bd9cd"
+    };
+
+    // Firebase-i işə salırıq
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, 'messages'); // Mesajlar 'messages' qovluğunda yığılacaq
+
+    // HTML Elementləri
     const chatWindow = document.getElementById('chat-window');
     const adInput = document.getElementById('ad-input');
     const mesajInput = document.getElementById('mesaj-input');
     const gonderBtn = document.getElementById('gonder-btn');
-    const temizleBtn = document.getElementById('temizle-btn');
 
-    // Səhifə açılanda yaddaşdakı mesajları yüklə
-    window.onload = function() {
-        yukleMesajlar();
-    };
+    // İlk açılışda mesaj pəncərəsini təmizləyək (Yüklənir yazısı üçün)
+    let ilkDefe = true;
 
-    function yukleMesajlar() {
-        const yaddas = localStorage.getItem('chatMesajlari');
-        if (yaddas) {
-            chatWindow.innerHTML = yaddas;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        } else {
-            chatWindow.innerHTML = '<div style="text-align: center; color: #aaa;">*** Çat Tarixçəsi Boşdur ***</div>';
-        }
-    }
-
-    function mesajGonder() {
-        const ad = adInput.value;
-        const mesaj = mesajInput.value;
-
-        if (ad.trim() === "" || mesaj.trim() === "") {
-            alert("Ad və Mesaj boş ola bilməz!");
-            return;
+    // --- MESAJ GƏLƏNDƏ (SERVERDƏN) ---
+    onChildAdded(messagesRef, (data) => {
+        if (ilkDefe) {
+            chatWindow.innerHTML = ""; // "Qoşulur..." yazısını sil
+            ilkDefe = false;
         }
 
-        // Cari vaxt
-        const indi = new Date();
-        const saat = indi.getHours().toString().padStart(2, '0');
-        const deqiqe = indi.getMinutes().toString().padStart(2, '0');
-        const tamVaxt = `${saat}:${deqiqe}`;
-
-        // Yeni mesaj HTML-i
-        const yeniMesajHTML = `
+        const msg = data.val();
+        
+        // Mesaj HTML-i
+        const yeniMesaj = `
             <div class="mesaj-satri">
-                <span class="vaxt">[${tamVaxt}]</span>
-                <span class="ad">${ad}</span> : 
-                <span class="mesaj-metni">${mesaj}</span>
+                <span class="vaxt">[${msg.time}]</span>
+                <span class="ad">${msg.name}</span> : 
+                <span class="mesaj-metni">${msg.text}</span>
             </div>
         `;
 
-        // Əgər tarixçə boşdursa, o yazını sil
-        if (chatWindow.innerHTML.includes("*** Çat Tarixçəsi Boşdur ***")) {
-            chatWindow.innerHTML = "";
+        chatWindow.innerHTML += yeniMesaj;
+        chatWindow.scrollTop = chatWindow.scrollHeight; // Avtomatik aşağı sürüşdür
+    });
+
+    // --- MESAJ GÖNDƏRƏNDƏ ---
+    function mesajGonder() {
+        const ad = adInput.value.trim();
+        const text = mesajInput.value.trim();
+
+        if (ad === "" || text === "") {
+            alert("Ad və Mesaj yazın!");
+            return;
         }
 
-        // Ekrana əlavə et
-        chatWindow.innerHTML += yeniMesajHTML;
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        // Cari Vaxt
+        const indi = new Date();
+        const saat = indi.getHours().toString().padStart(2, '0');
+        const deqiqe = indi.getMinutes().toString().padStart(2, '0');
+        const vaxt = `${saat}:${deqiqe}`;
 
-        // YADDAŞA YAZ (LocalStorage)
-        localStorage.setItem('chatMesajlari', chatWindow.innerHTML);
+        // Serverə göndəririk
+        push(messagesRef, {
+            name: ad,
+            text: text,
+            time: vaxt
+        });
 
-        // Mesaj qutusunu təmizlə (Ad qalsın)
+        // Mesaj qutusunu təmizlə
         mesajInput.value = "";
     }
 
+    // Düyməyə basanda
     gonderBtn.addEventListener('click', mesajGonder);
 
-    mesajInput.addEventListener('keypress', function (e) {
+    // Enterə basanda
+    mesajInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             mesajGonder();
         }
     });
 
-    // Təmizlə düyməsi (Həm ekranı, həm yaddaşı silir)
-    temizleBtn.addEventListener('click', function() {
-        if(confirm("Bütün yazışmaları silmək istəyirsiniz?")) {
-            localStorage.removeItem('chatMesajlari');
-            chatWindow.innerHTML = '<div style="text-align: center; color: #aaa;">*** Çat Təmizləndi ***</div>';
-        }
-    });
 </script>
 
 </body>
