@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -23,7 +22,7 @@
             max-width: 95%;
             display: flex;
             flex-direction: column;
-            height: 90vh; /* Ekranın 90%-ni tutsun */
+            height: 90vh;
         }
 
         /* Başlıq */
@@ -34,6 +33,7 @@
             margin-bottom: 10px;
             box-shadow: 0 0 10px #00ff00;
             flex-shrink: 0;
+            position: relative;
         }
 
         .header h1 {
@@ -42,10 +42,23 @@
             font-size: 1.5em;
         }
 
+        /* Silmə düyməsi (Yuxarı sağ küncdə) */
+        #sil-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background-color: maroon;
+            color: white;
+            border: 1px solid red;
+            font-size: 0.8em;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
         /* Çat Pəncərəsi */
         #chat-window {
             border: 2px solid #00ff00;
-            flex-grow: 1; /* Boş yeri doldursun */
+            flex-grow: 1;
             overflow-y: auto;
             padding: 15px;
             margin-bottom: 10px;
@@ -93,13 +106,13 @@
             padding: 10px;
             font-family: 'Courier New', Courier, monospace;
             outline: none;
-            font-size: 16px; /* Mobildə zoom olmasın deyə */
+            font-size: 16px;
         }
 
         #ad-input { width: 25%; }
         #mesaj-input { width: 75%; }
 
-        button {
+        #gonder-btn {
             padding: 10px 15px;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
@@ -109,10 +122,7 @@
             color: white;
         }
 
-        button:active {
-            background-color: #004400;
-        }
-
+        button:active { opacity: 0.7; }
         ::placeholder { color: #005500; }
     </style>
 </head>
@@ -122,6 +132,8 @@
     <div class="header">
         <h1>★ RETRO CHAT ★</h1>
         <small>[ SERVER ONLINE ]</small>
+        <!-- TƏMİZLƏ DÜYMƏSİ -->
+        <button id="sil-btn">TƏMİZLƏ</button>
     </div>
 
     <div id="chat-window">
@@ -137,13 +149,11 @@
     </div>
 </div>
 
-<!-- FIREBASE KODLARI (JavaScript) -->
+<!-- FIREBASE KODLARI -->
 <script type="module">
-    // Firebase kitabxanalarını yükləyirik
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Sizin Konfiqurasiya (Şəklindən götürdüyüm)
     const firebaseConfig = {
         apiKey: "AIzaSyCJ6MEdzn-xQfe9uEWsi6yz-9jDTAKZJxc",
         authDomain: "retro-chat-56380.firebaseapp.com",
@@ -154,43 +164,40 @@
         appId: "1:1076331546936:web:9c9da31ffb7e3d987bd9cd"
     };
 
-    // Firebase-i işə salırıq
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const messagesRef = ref(db, 'messages'); // Mesajlar 'messages' qovluğunda yığılacaq
+    const messagesRef = ref(db, 'messages');
 
-    // HTML Elementləri
     const chatWindow = document.getElementById('chat-window');
     const adInput = document.getElementById('ad-input');
     const mesajInput = document.getElementById('mesaj-input');
     const gonderBtn = document.getElementById('gonder-btn');
+    const silBtn = document.getElementById('sil-btn');
 
-    // İlk açılışda mesaj pəncərəsini təmizləyək (Yüklənir yazısı üçün)
-    let ilkDefe = true;
+    // --- MƏLUMATLAR DƏYİŞƏNDƏ (SİLİNƏNDƏ VƏ YA YAZILANDA) ---
+    onValue(messagesRef, (snapshot) => {
+        chatWindow.innerHTML = ""; // Hər dəfə sıfırla və yenidən çək
+        const data = snapshot.val();
 
-    // --- MESAJ GƏLƏNDƏ (SERVERDƏN) ---
-    onChildAdded(messagesRef, (data) => {
-        if (ilkDefe) {
-            chatWindow.innerHTML = ""; // "Qoşulur..." yazısını sil
-            ilkDefe = false;
+        if (data) {
+            Object.values(data).forEach(msg => {
+                const yeniMesaj = `
+                    <div class="mesaj-satri">
+                        <span class="vaxt">[${msg.time}]</span>
+                        <span class="ad">${msg.name}</span> : 
+                        <span class="mesaj-metni">${msg.text}</span>
+                    </div>
+                `;
+                chatWindow.innerHTML += yeniMesaj;
+            });
+            // Aşağı sürüşdür
+            setTimeout(() => chatWindow.scrollTop = chatWindow.scrollHeight, 100);
+        } else {
+            chatWindow.innerHTML = '<div style="text-align: center; color: #aaa; margin-top: 20px;">*** Çat Təmizdir ***</div>';
         }
-
-        const msg = data.val();
-        
-        // Mesaj HTML-i
-        const yeniMesaj = `
-            <div class="mesaj-satri">
-                <span class="vaxt">[${msg.time}]</span>
-                <span class="ad">${msg.name}</span> : 
-                <span class="mesaj-metni">${msg.text}</span>
-            </div>
-        `;
-
-        chatWindow.innerHTML += yeniMesaj;
-        chatWindow.scrollTop = chatWindow.scrollHeight; // Avtomatik aşağı sürüşdür
     });
 
-    // --- MESAJ GÖNDƏRƏNDƏ ---
+    // --- MESAJ GÖNDƏRMƏ ---
     function mesajGonder() {
         const ad = adInput.value.trim();
         const text = mesajInput.value.trim();
@@ -200,27 +207,29 @@
             return;
         }
 
-        // Cari Vaxt
         const indi = new Date();
         const saat = indi.getHours().toString().padStart(2, '0');
         const deqiqe = indi.getMinutes().toString().padStart(2, '0');
         const vaxt = `${saat}:${deqiqe}`;
 
-        // Serverə göndəririk
         push(messagesRef, {
             name: ad,
             text: text,
             time: vaxt
         });
 
-        // Mesaj qutusunu təmizlə
         mesajInput.value = "";
     }
 
-    // Düyməyə basanda
+    // --- BÜTÜN ÇATI SİLMƏK ---
+    silBtn.addEventListener('click', () => {
+        if(confirm("DİQQƏT! Bütün yazışmalar hər kəs üçün silinəcək. Davam edilsin?")) {
+            remove(messagesRef);
+        }
+    });
+
     gonderBtn.addEventListener('click', mesajGonder);
 
-    // Enterə basanda
     mesajInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             mesajGonder();
@@ -231,4 +240,6 @@
 
 </body>
 </html>
+
+    
 
