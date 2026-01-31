@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -28,15 +29,15 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Sənin Firebase məlumatların
+        // Sənin Firebase məlumatların (Şəkildəki məlumatlara əsasən)
         const firebaseConfig = {
-            apiKey: "AIzaSyCJ6Medzn-xQfe9uEWsi6yz-9jDTAKZJxc",
+            apiKey: "AIzaSyCJ6Vedzn-xQfe9uEwsi6yz-9jDTAKZJxc",
             authDomain: "retro-chat-56380.firebaseapp.com",
             databaseURL: "https://retro-chat-56380-default-rtdb.firebaseio.com",
             projectId: "retro-chat-56380",
-            storageBucket: "retro-chat-56380.firebasestorage.app",
+            storageBucket: "retro-chat-56380.appspot.com",
             messagingSenderId: "1076331546936",
             appId: "1:1076331546936:web:9c9da31ffb7e3d987bd9cd"
         };
@@ -62,25 +63,37 @@
             }
         };
 
-        // Enter düyməsi ilə göndər
-        msgInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendBtn.click();
-        });
-
-        // Mesajları Bazadan Oxumaq
+        // Mesajları Dinləmə (Ekrana çıxarma)
         onChildAdded(messagesRef, (data) => {
             const msg = data.val();
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg';
-            msgDiv.innerHTML = `<span style="color: #0f0;">${msg.username}:</span> ${msg.text}`;
-            chatBox.appendChild(msgDiv);
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `<span class="user">${msg.username}:</span> ${msg.text}`;
+            chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         });
 
-        // Ekranı müvəqqəti təmizləmək üçün funksiya
-        window.clearDisplay = () => {
-            chatBox.innerHTML = '<div class="msg system">*** Chat təmizləndi (Bazadan silinmədi) ***</div>';
+        // BÜTÜN MESAJLARI BAZADAN SİLMƏ FUNKSİYASI
+        window.clearDisplay = function() {
+            if (confirm("Diqqət! Bütün mesajlar hamı üçün silinsin?")) {
+                remove(messagesRef)
+                    .then(() => {
+                        // Bazanı təmizlədikdən sonra ekranı da yeniləyirik
+                        chatBox.innerHTML = `
+                            <div class="msg system">*** Xoş gəlmisiniz! ***</div>
+                            <div class="msg system">*** Bütün mesajlar bazadan silindi ***</div>
+                        `;
+                    })
+                    .catch((error) => {
+                        alert("Xəta baş verdi: " + error.message);
+                    });
+            }
         };
+
+        // Enter düyməsi ilə göndərmə
+        msgInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendBtn.click();
+        });
     </script>
 </body>
 </html>
